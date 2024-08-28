@@ -1,0 +1,22 @@
+{
+    "classPathURLs" : [
+        "file:/opt/openidm/j2ee_agents/jetty_v7_agent/lib/agent.jar",
+        "file:/opt/openidm/j2ee_agents/jetty_v7_agent/lib/openamclientsdk.jar",
+        "file:/opt/openidm/j2ee_agents/jetty_v7_agent/lib/",
+        "file:/opt/openidm/j2ee_agents/jetty_v7_agent/locale/"
+    ],
+    "systemProperties" : {
+        "openam.agents.bootstrap.dir" : "/opt/openidm/j2ee_agents/jetty_v7_agent/openidm/config/"
+    },
+    "requestAttributes" : {
+        "openidm.authinvoked" : "servletfilter-openam",
+        "openidm.username" : "anonymous"
+    },
+    "scriptExtensions" : {
+        "augmentSecurityContext" : {
+            "type" : "text/javascript",
+            "file" : "script/security/populateContext.js"
+        }
+    },
+    "filterClass" : "com.sun.identity.agents.filter.AmAgentFilter"
+}

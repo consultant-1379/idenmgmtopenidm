@@ -1,0 +1,15 @@
+<tor_sw>
+    <litp:component-def id="openidm">
+        <litp:lsb-service-def id="openidm_service">
+          <name>openidm</name>
+          <require>pkg</require>
+          <litp:ip-address-def id="ip"/>
+        </litp:lsb-service-def>
+        <litp:package-def id="pkg">
+          <ensure>installed</ensure>
+          <name>ERICidenmgmtopenidm_CXP9030737</name>
+          <repository/>
+          <version>%{Version}</version>
+        </litp:package-def>
+  </litp:component-def>
+</tor_sw>

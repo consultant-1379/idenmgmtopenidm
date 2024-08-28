@@ -1,0 +1,12 @@
+{
+    "threadPool" : {
+        "threadCount" : "10"
+    },
+    "scheduler" : {
+        "instanceId" : "NODENAME"
+    },
+    "advancedProperties" : {
+        "org.quartz.scheduler.instanceName" : "OpenIDMScheduler",
+        "org.quartz.scheduler.instanceId" : "AUTO"
+    }
+}

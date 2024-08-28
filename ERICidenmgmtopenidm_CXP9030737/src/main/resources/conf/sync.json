@@ -1,0 +1,319 @@
+{
+    "mappings" : [
+        {
+            "name" : "systemLdapAccounts_managedUser",
+            "source" : "system/ldap/account",
+            "target" : "managed/user",
+            "correlationQuery" : {
+                "type" : "text/javascript",
+                "file" : "script/lastLoginCorrelationQuery.js"
+            },
+            "properties" : [
+                {
+                    "source" : "lastlogintime",
+                    "target" : "lastLogin"
+                }
+            ],
+            "onUpdate" : {
+                "type" : "text/javascript",
+                "file" : "script/LdapToManagedUserUpdate.js"
+            },
+            "policies" : [
+                {
+                    "situation" : "CONFIRMED",
+                    "action" : "UPDATE"
+                },
+                {
+                    "situation" : "FOUND",
+                    "action" : "UPDATE"
+                },
+                {
+                    "situation" : "ABSENT",
+                    "action" : "CREATE"
+                },
+                {
+                    "situation" : "AMBIGUOUS",
+                    "action" : "EXCEPTION"
+                },
+                {
+                    "situation" : "MISSING",
+                    "action" : "UNLINK"
+                },
+                {
+                    "situation" : "SOURCE_MISSING",
+                    "action" : "EXCEPTION"
+                },
+                {
+                    "situation" : "UNQUALIFIED",
+                    "action" : "IGNORE"
+                },
+                {
+                    "situation" : "UNASSIGNED",
+                    "action" : "IGNORE"
+                }
+            ]
+        },
+        {
+            "name" : "managedUser_systemLdapAccounts",
+            "source" : "managed/user",
+            "target" : "system/ldap/account",
+            "links" : "managedUser_systemLdapAccounts",
+            "correlationQuery" : {
+                "type" : "text/javascript",
+                "file" : "script/ldapBackCorrelationQuery.js"
+            },
+            "validSource" : {
+                "type" : "text/javascript",
+                "file" : "script/isValidSync.js"
+            },
+            "properties" : [
+                {
+                    "source" : "userName",
+                    "target" : "uid"
+                },
+                {
+                    "source" : "userName",
+                    "target" : "cn"
+                },
+                {
+                    "source" : "userType",
+                    "target" : "userType"
+                },
+                {
+                    "source" : "firstName",
+                    "target" : "givenName"
+                },
+                {
+                    "source" : "lastName",
+                    "target" : "sn"
+                },
+                {
+                    "source" : "email",
+                    "target" : "mail"
+                }
+            ],
+            "onCreate" : {
+                "type" : "text/javascript",
+                "file" : "script/updateLdap.js"
+            },
+            "onUpdate" : {
+                "type" : "text/javascript",
+                "file" : "script/updatePwd.js"
+            },
+            "policies" : [
+                {
+                    "situation" : "CONFIRMED",
+                    "action" : "UPDATE",
+                    "postAction" : {
+                        "type" : "text/javascript",
+                        "file" : "script/postUserUpdate.js"
+                    }
+                },
+                {
+                    "situation" : "FOUND",
+                    "action" : "LINK"
+                },
+                {
+                    "situation" : "ABSENT",
+                    "action" : "CREATE"
+                },
+                {
+                    "situation" : "AMBIGUOUS",
+                    "action" : "IGNORE"
+                },
+                {
+                    "situation" : "MISSING",
+                    "action" : "CREATE"
+                },
+                {
+                    "situation" : "SOURCE_MISSING",
+                    "action" : "DELETE",
+                    "postAction" : {
+                        "type" : "text/javascript",
+                        "file" : "script/postUserDelete.js"
+                    }
+                },
+                {
+                    "situation" : "UNQUALIFIED",
+                    "action" : "IGNORE"
+                },
+                {
+                    "situation" : "UNASSIGNED",
+                    "action" : "IGNORE"
+                }
+            ]
+        },
+        {
+            "name" : "systemLdapRoles_managedRole",
+            "source" : "system/ldap/role",
+            "target" : "managed/role",
+            "properties" : [
+                {
+                    "source" : "uniqueMember",
+                    "target" : "uniqueMember"
+                }
+            ],
+            "onUpdate" : {
+                "type" : "text/javascript",
+                "file" : "script/LdapToManagedRoleUpdate.js"
+            },
+            "policies" : [
+                {
+                    "situation" : "CONFIRMED",
+                    "action" : "UPDATE"
+                },
+                {
+                    "situation" : "FOUND",
+                    "action" : "UPDATE"
+                },
+                {
+                    "situation" : "ABSENT",
+                    "action" : "CREATE"
+                },
+                {
+                    "situation" : "AMBIGUOUS",
+                    "action" : "EXCEPTION"
+                },
+                {
+                    "situation" : "MISSING",
+                    "action" : "UNLINK"
+                },
+                {
+                    "situation" : "SOURCE_MISSING",
+                    "action" : "EXCEPTION"
+                },
+                {
+                    "situation" : "UNQUALIFIED",
+                    "action" : "IGNORE"
+                },
+                {
+                    "situation" : "UNASSIGNED",
+                    "action" : "IGNORE"
+                }
+            ]
+        },
+        {
+            "name" : "managedRole_systemLdapRoles",
+            "source" : "managed/role",
+            "target" : "system/ldap/role",
+            "links" : "systemLdapRoles_managedRole",
+            "correlationQuery" : {
+                "type" : "text/javascript",
+                "file" : "script/ldapRoleCorrelationQuery.js"
+            },
+            "properties" : [
+                {
+                    "source" : "description",
+                    "target" : "description"
+                },
+                {
+                    "source" : "uniqueMember",
+                    "target" : "uniqueMember"
+                },
+                {
+                    "source" : "roleName",
+                    "target" : "cn"
+                }
+            ],
+            "onCreate" : {
+                "type" : "text/javascript",
+                "file" : "script/createRole.js"
+            },
+            "onUpdate" : {
+                "type" : "text/javascript",
+                "file" : "script/updateRole.js"
+            },
+            "policies" : [
+                {
+                    "situation" : "CONFIRMED",
+                    "action" : "UPDATE"
+                },
+                {
+                    "situation" : "FOUND",
+                    "action" : "LINK"
+                },
+                {
+                    "situation" : "ABSENT",
+                    "action" : "CREATE"
+                },
+                {
+                    "situation" : "AMBIGUOUS",
+                    "action" : "IGNORE"
+                },
+                {
+                    "situation" : "MISSING",
+                    "action" : "CREATE"
+                },
+                {
+                    "situation" : "SOURCE_MISSING",
+                    "action" : "DELETE"
+                },
+                {
+                    "situation" : "UNQUALIFIED",
+                    "action" : "IGNORE"
+                },
+                {
+                    "situation" : "UNASSIGNED",
+                    "action" : "IGNORE"
+                }
+            ]
+        },
+        {
+            "name" : "systemLdapGroups_managedGroup",
+            "source" : "system/ldap/group",
+            "target" : "managed/group",
+            "properties" : [
+                {
+                    "source" : "dn",
+                    "target" : "dn"
+                },
+                {
+                    "source" : "description",
+                    "target" : "description"
+                },
+                {
+                    "source" : "uniqueMember",
+                    "target" : "uniqueMember"
+                },
+                {
+                    "source" : "cn",
+                    "target" : "name"
+                }
+            ],
+            "policies" : [
+                {
+                    "situation" : "CONFIRMED",
+                    "action" : "UPDATE"
+                },
+                {
+                    "situation" : "FOUND",
+                    "action" : "UPDATE"
+                },
+                {
+                    "situation" : "ABSENT",
+                    "action" : "CREATE"
+                },
+                {
+                    "situation" : "AMBIGUOUS",
+                    "action" : "EXCEPTION"
+                },
+                {
+                    "situation" : "MISSING",
+                    "action" : "UNLINK"
+                },
+                {
+                    "situation" : "SOURCE_MISSING",
+                    "action" : "EXCEPTION"
+                },
+                {
+                    "situation" : "UNQUALIFIED",
+                    "action" : "IGNORE"
+                },
+                {
+                    "situation" : "UNASSIGNED",
+                    "action" : "IGNORE"
+                }
+            ]
+        }
+    ]
+}

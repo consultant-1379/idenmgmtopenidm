@@ -1,0 +1,229 @@
+#!/bin/sh
+#
+# this file was generated automatically by running: /opt/openidm/bin/create-openidm-rc.sh
+#    
+#     Modified the original START_CMD beacuse it was broken due to bug in  create-openidm-rc.sh
+#     Modified the  CLASS_PATH
+#
+# chkconfig: 345 95 5
+# description: start/stop openidm
+
+
+# Source functions library, otherwise the status command below will fail.
+. /etc/init.d/functions
+
+JAVA_BIN=/usr/bin/java
+OPENIDM_HOME=/opt/openidm
+OPENIDM_USER=openidm
+OPENIDM_PID_FILE=$OPENIDM_HOME/.openidm.pid
+OPENIDM_LOG=/var/log/openidm/server.out
+OPENIDM_OPTS="-Xmx1024m -Dfile.encoding=UTF-8"
+CAT="/bin/cat"
+PS="/bin/ps"
+GREP="/bin/grep"
+AWK="/bin/awk"
+KILL="/bin/kill"
+TEE="/usr/bin/tee"
+SSH="/usr/bin/ssh"
+SSH_OPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+SERVICE="/sbin/service"
+RM="/bin/rm"
+CHOWN="/bin/chown"
+CURL="/usr/bin/curl"
+SED="/bin/sed"
+ROOTCA_CERT="/ericsson/tor/data/certificates/rootCA.pem"
+GLOBAL_PROPERTY_FILE="/ericsson/tor/data/global.properties"
+
+MYSQL_HOST="idmdbhost"
+MYSQL_LINUX_USER="idmmysql"
+
+# shutdown and clean up any left over openidm processes
+shutdown_openidm()
+{
+  echo "Shutting down openidm..." >> ${OPENIDM_LOG}
+  ${OPENIDM_HOME}/shutdown.sh >> ${OPENIDM_LOG} 2>&1
+  rc=$?
+  if [ $rc -ne 0 ]; then
+    echo "ERROR: ${OPENIDM_HOME}/shutdown.sh returned $rc" >> ${OPENIDM_LOG} 
+  fi
+  
+  # clean up left over processes, just in case
+  pids=`${PS} -ef | ${GREP} openidm | ${GREP} "launcher.json" | ${AWK} '{print $2}'`
+  if [ -n "${pids}" ]; then
+    for pid in ${pids}
+      do
+        ${KILL} -9 ${pid} > /dev/null 2>&1
+      done
+  fi
+  if [ -f $OPENIDM_PID_FILE ]; then
+    rm -f "$OPENIDM_PID_FILE"
+  fi
+
+  # clean up felix cache
+  ${RM} -rf ${OPENIDM_HOME}/felix-cache/*
+}
+
+#Check connection to local ldap server
+check_local_ldap()
+{
+
+  if [ ! -r "${GLOBAL_PROPERTY_FILE}" ]; then
+    echo "ERROR: Cannot read ${GLOBAL_PROPERTY_FILE}" | ${TEE} -a  ${OPENIDM_LOG}
+    return 1
+  fi
+  . ${GLOBAL_PROPERTY_FILE}
+
+  echo "Verifying connection to local opendj" >> ${OPENIDM_LOG}
+  $CURL --cacert ${ROOTCA_CERT} ldaps://ldap-local:${COM_INF_LDAP_PORT}/${COM_INF_LDAP_ROOT_SUFFIX} >> ${OPENIDM_LOG} 2>&1
+
+  if [[ $? -ne 0 ]]; then
+    echo "Cannot connect to local ldap server, OpenDJ is not ready" | ${TEE} -a  ${OPENIDM_LOG}
+    return 1
+  fi
+
+  return 0
+}
+
+# check dependencies
+check_mysql_deps()
+{
+  count=0
+  num_retries=12
+  sleep_time=10
+
+  cmd=$*
+  if [ -z "${cmd}" ]; then
+    return 1
+  fi
+
+  echo "Checking dependency using command \"${cmd}\"" >> ${OPENIDM_LOG} 
+  while [ $count -lt ${num_retries} ];
+  do
+    eval $cmd >> ${OPENIDM_LOG} 2>&1
+    if [ $? -eq 0 ]; then
+      echo "Dependency check passed" >> ${OPENIDM_LOG}
+      return 0
+    else
+     count=$(expr $count + 1)
+     echo "Waiting for command \"${cmd}\" to return exit code 0" | ${TEE} -a  ${OPENIDM_LOG}
+     sleep ${sleep_time}
+    fi
+  done
+
+  echo "Command \"${cmd}\" returned non-zero exit code" | ${TEE} -a  ${OPENIDM_LOG}
+  echo "Dependency check failed. OpenIDM cannot start" | ${TEE} -a  ${OPENIDM_LOG}
+  return 1
+}
+
+# OpenIDM starts only if local OpenDJ is ready
+# This is to get rid of the timing issues which the remote OpenDJ is runing while the local OpenDJ is just starting.
+check_opendj_deps()
+{
+  count=0
+  num_retries=12
+  sleep_time=10
+  local_opendj_status_cmd='/sbin/service opendj status'
+
+  echo "Checking the opendj dependency " >> ${OPENIDM_LOG} 
+  while [ $count -lt ${num_retries} ];
+  do
+    # check the local opendj instance first
+    eval $local_opendj_status_cmd >> ${OPENIDM_LOG} 2>&1
+    if [ $? -eq 0 ]; then
+      check_local_ldap
+      if [ $? -eq 0 ]; then
+        echo "Dependency check passed on the local opendj" >> ${OPENIDM_LOG}
+        return 0
+      fi
+    fi
+
+    # checks on local opendj has failed, so sleep and retry
+    count=$(expr $count + 1)
+    echo "Waiting for local OpenDJ to be running and ready" | ${TEE} -a  ${OPENIDM_LOG}
+    sleep ${sleep_time}
+    
+  done
+
+  echo "Dependency check for local opendj has failed. OpenIDM cannot start" | ${TEE} -a  ${OPENIDM_LOG}
+  return 1
+}
+
+
+# Set JDK Logger config file if it is present and an override has not been issued
+if [ -z "$LOGGING_CONFIG" ]; then
+  if [ -r "$OPENIDM_HOME"/conf/logging.properties ]; then
+    LOGGING_CONFIG="-Djava.util.logging.config.file=$OPENIDM_HOME/conf/logging.properties"
+  else
+    LOGGING_CONFIG="-Dnop"
+  fi
+fi
+
+CLASSPATH="$OPENIDM_HOME/bin/*:$OPENIDM_HOME/framework/*"
+
+
+START_CMD="nohup $JAVA_BIN $LOGGING_CONFIG $JAVA_OPTS $OPENIDM_OPTS \
+                -Djava.endorsed.dirs=$JAVA_ENDORSED_DIRS \
+                -classpath $CLASSPATH \
+                -Dopenidm.system.server.root=$OPENIDM_HOME \
+                -Djava.security.auth.login.config=security/jaas-repo.conf \
+                -Dignore.openidm.system.server.environment=\"dev|test|qa|prod\" \
+                -Dfelix.startup.daemon=true \
+                org.forgerock.commons.launcher.Main -c bin/launcher.json  \
+                   >> ${OPENIDM_LOG} 2>&1 &"
+
+
+case "${1}" in
+start|restart)
+    # uncomment echo's to debug
+    #   echo $START_CMD
+    #   echo "check logfile:  cat  /var/log/openidm/server.out"
+    >> ${OPENIDM_LOG}
+    ${CHOWN} openidm:openidm ${OPENIDM_LOG}
+    if [ "${1}" = "restart" ]; then
+      shutdown_openidm
+    else
+      pids=`${PS} -ef | ${GREP} openidm | ${GREP} "launcher.json" | ${AWK} '{print $2}'`
+      if [ -n "${pids}" ]; then 
+        echo "openidm already running with pid(s): ${pids}" | ${TEE} -a ${OPENIDM_LOG}
+        exit 0
+      fi
+    fi
+
+    mysql_status_cmd="${SSH} ${SSH_OPTS} ${MYSQL_LINUX_USER}@${MYSQL_HOST} '/sbin/service mysql status'"
+
+    # check if mysql is running
+    check_mysql_deps ${mysql_status_cmd}
+    if [ $? -ne 0 ]; then
+      exit 1
+    fi
+
+    # check if opendj is running
+    check_opendj_deps 
+    if [ $? -ne 0 ]; then
+      exit 1
+    fi
+
+    # clean up felix cache
+    ${RM} -rf ${OPENIDM_HOME}/felix-cache/*
+
+    cd ${OPENIDM_HOME}
+    echo "Starting openidm..." >> ${OPENIDM_LOG}
+    su $OPENIDM_USER -c "$START_CMD eval echo \$\! > $OPENIDM_PID_FILE"
+    # Add 10 seconds delay here to ensure OpenIDM is started properly. 
+    # Another solution is to add OpenIDM status check by REST. This will need user and password info. 
+    sleep 10
+    exit ${?}
+  ;;
+stop)
+    shutdown_openidm
+    exit 0
+  ;;
+status)
+  status -p  ${OPENIDM_PID_FILE} openidm
+  exit ${?}
+  ;;
+*)
+  echo "Usage: openidm { start | stop | status | restart }"
+  exit 1
+  ;;
+esac

@@ -1,0 +1,31 @@
+{
+    "filters" : [
+        {
+            "onRequest" : {
+                "type" : "text/javascript",
+                "file" : "script/custom-router-authz.js"
+            }
+        },
+        {
+            "onRequest" : {
+                "type" : "text/javascript",
+                "file" : "bin/defaults/script/policyFilter.js"
+            },
+            "methods" : [
+                "create",
+                "update"
+            ]
+        },
+        {
+            "pattern" : "^audit/activity$",
+            "onRequest" : {
+                "type" : "text/javascript",
+                "file" : "script/setPasswordNull.js"
+            },
+            "methods" : [
+                "create",
+                "update"
+            ]
+        }
+    ]
+}

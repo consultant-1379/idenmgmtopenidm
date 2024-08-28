@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+<!--Please Use the latest version of integration pom.xml or the one you want to reference to -->
+	<parent>
+		<groupId>com.ericsson.nms</groupId>
+		<artifactId>integration</artifactId>
+		<version>15.1.0.2</version>
+	</parent>
+	<groupId>com.ericsson.nms.security</groupId>
+	<artifactId>idenmgmtopenidm</artifactId>
+	<version>1.2.2-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<name>[${project.artifactId}] JEE6 Project</name>
+
+  <modules>
+    <module>ERICidenmgmtopenidm_CXP9030737</module>
+    <module>idenmgmtopenidm-sessioninvalidation</module>
+  </modules>
+</project>

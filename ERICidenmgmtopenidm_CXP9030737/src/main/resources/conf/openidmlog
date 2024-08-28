@@ -1,0 +1,16 @@
+/var/log/openidm/audit/* {
+daily
+missingok
+rotate 90 
+size 10M
+compress
+}
+/var/log/openidm/server.out {
+missingok
+rotate 10
+size 1M
+create 0644 openidm openidm
+postrotate
+  /sbin/service openidm restart > /dev/null 2>&1
+endscript
+}

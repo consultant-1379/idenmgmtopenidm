@@ -1,0 +1,30 @@
+{
+    "eventTypes" : {
+        "activity" : {
+            "filter" : {
+                "actions" : [
+                    "create",
+                    "update",
+                    "delete",
+                    "patch",
+                    "action"
+                ]
+            },
+            "watchedFields" : [ ],
+            "passwordFields" : [
+                "password"
+            ]
+        },
+        "recon" : { }
+    },
+    "logTo" : [
+        {
+            "logType" : "csv",
+            "location" : "/var/log/openidm/audit",
+            "recordDelimiter" : ";"
+        },
+        {
+            "logType" : "repository"
+        }
+    ]
+}

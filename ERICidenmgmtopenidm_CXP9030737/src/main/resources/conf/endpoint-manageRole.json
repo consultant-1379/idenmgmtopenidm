@@ -1,0 +1,5 @@
+{
+    "context" : "endpoint/manageRole",
+    "type" : "text/javascript",
+    "file" : "script/manageRole.js"
+}

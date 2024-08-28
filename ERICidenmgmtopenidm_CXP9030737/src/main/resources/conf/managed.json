@@ -1,0 +1,58 @@
+{
+    "objects" : [
+        {
+            "name" : "user",
+            "properties" : [
+                {
+                    "name" : "password",
+                    "encryption" : {
+                        "key" : "openidm-sym-default"
+                    },
+                    "scope" : "private"
+                },
+                {
+                    "name" : "ldapPassword",
+                    "encryption" : {
+                        "key" : "openidm-sym-default"
+                    },
+                    "scope" : "private"
+                },
+                {
+                    "name" : "passwordReset",
+                    "scope" : "private"
+                },
+                {
+                    "name" : "roles",
+                    "scope" : "private"
+                }
+            ],
+            "onCreate" : {
+                "type" : "text/javascript",
+                "file" : "script/manageCreateUser.js"
+            },
+            "onUpdate" : {
+                "type" : "text/javascript",
+                "file" : "script/manageUpdateUser.js"
+            },
+            "onDelete" : {
+                "type" : "text/javascript",
+                "file" : "script/manageDeleteUser.js"
+            }
+        },
+        {
+            "name" : "role",
+            "onCreate" : {
+                "type" : "text/javascript",
+                "file" : "script/manageCreateRole.js"
+            },
+            "onDelete" : {
+                "type" : "text/javascript",
+                "file" : "script/manageDeleteRole.js"
+            }
+        },
+        {
+            "name" : "group"
+        }
+    ]
+}
+
